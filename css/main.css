@@ -1,3 +1,27 @@
+body {
+    padding-top: 70px;
+}
+
 .container {
-    margin-top: 50px;
+    max-width: 800px;
+}
+
+.jumbotron {
+    text-align: center;
+}
+
+.jumbotron.code-sample {
+    padding: 20px 30px!important;
+    background-color: #1B2426!important;
+    /*font-size: 16px;*/
+}
+
+.jumbotron.code-sample pre {
+    display: none;
+}
+
+.footer {
+    border-top: 1px solid #E5E5E5;
+    color: #777777;
+    padding-top: 19px;
 }
