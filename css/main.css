@@ -10,6 +10,10 @@ body {
     text-align: center;
 }
 
+.jumbotron h1 {
+    font-weight: bold;
+}
+
 .jumbotron.code-sample {
     padding: 20px 30px!important;
     background-color: #1B2426!important;
