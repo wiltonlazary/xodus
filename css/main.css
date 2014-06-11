@@ -15,17 +15,17 @@ body {
 }
 
 .jumbotron.code-sample {
-    padding: 20px 30px!important;
+    padding: 10px 20px!important;
     background-color: #1B2426!important;
-    /*font-size: 16px;*/
 }
 
 .jumbotron.code-sample pre {
     display: none;
 }
 
-.jumbotron.code-sample div {
+.jumbotron.code-sample .syntaxhighlighter {
     overflow-y: hidden!important;
+    font-size: 18px!important;
 }
 
 .footer {

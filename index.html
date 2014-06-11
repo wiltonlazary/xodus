@@ -64,9 +64,10 @@ final Store store = env.computeInTransaction(txn ->
     env.openStore("Users", WITHOUT_DUPLICATES, txn));
     
 env.executeInTransaction((txn) -> 
-   { store.put(txn, stringToEntry("lvo"), stringToEntry("jetbrains")); });
+   { store.put(txn, stringToEntry("lvo"),
+                    stringToEntry("jetbrains")); });
 
-System.out.println(env.computeInTransaction(txn ->
+println(env.computeInTransaction(txn ->
     entryToString(store.get(txn, stringToEntry("lvo")))));
 
 env.close();
