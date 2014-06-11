@@ -60,13 +60,14 @@
                 <pre class="brush: java; gutter: false; toolbar: false;">
 final Environment env = Environments.newInstance("mydatabase");
 
-env.executeInTransaction(new TransactionalExecutable() {
-    public void execute(Transaction txn) {
-        Store store = env.openStore("Users", StoreConfig.WITHOUT_DUPLICATES, txn);
-        store.put(txn, stringToEntry("lvo"), stringToEntry("jetbrains"));
-        System.out.println(entryToString(store.get(txn, stringToEntry("lvo"))));
-    }
-});
+final Store store = env.computeInTransaction(txn ->
+    env.openStore("Users", WITHOUT_DUPLICATES, txn))
+    
+env.executeInTransaction((txn) -> 
+   { store.put(txn, stringToEntry("lvo"), stringToEntry("jetbrains")); })
+
+System.out.println(env.computeInTransaction(txn ->
+    entryToString(store.get(txn, stringToEntry("lvo")))));
 
 env.close();
             </pre>
