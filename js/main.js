@@ -8,9 +8,6 @@ $(function () {
     title: {
       text: 'Xodus vs Oracle Berkeley DB JE'
     },
-    subtitle: {
-      text: 'Tokyo Cabinet Benchmark with 1000000 keys'
-    },
     xAxis: {
       categories: [ 'Successive write', 'Random Write', 'Successive read', 'Random read' ],
       title: {
@@ -20,12 +17,12 @@ $(function () {
     yAxis: {
       min: 0,
       title: {
-        text: 'Keys per Second',
-        align: 'high'
+        text: 'Keys per Second'
       },
       labels: {
-        overflow: 'justify'
-      }
+        enabled: false
+      },
+      gridLineColor: 'white'
     },
     plotOptions: {
       bar: {
@@ -48,6 +45,8 @@ $(function () {
     credits: {
       enabled: false
     },
+    colors: ['red', '#434348', 'lightgray', '#f7a35c', '#8085e9',
+      '#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1'],
     series: [{
       name: 'Xodus BTree',
       data: [Math.round(1000000/0.645), Math.round(1000000/2.47), Math.round(1000000/0.347), Math.round(1000000/5.229)]
