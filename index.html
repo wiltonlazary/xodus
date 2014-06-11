@@ -67,7 +67,7 @@ env.executeInTransaction((txn) ->
    { store.put(txn, stringToEntry("lvo"),
                     stringToEntry("jetbrains")); });
 
-println(env.computeInTransaction(txn ->
+out.println(env.computeInTransaction(txn ->
     entryToString(store.get(txn, stringToEntry("lvo")))));
 
 env.close();
