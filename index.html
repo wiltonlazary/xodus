@@ -84,9 +84,6 @@ env.close();
             <p>
                 TODO: Maven repository. How to get into maven and gradle.
             </p>
-            <p>
-
-            </p>
 
             <h2 id="features">Features</h2>
             <ul>
@@ -98,11 +95,14 @@ env.close();
             <p>
                 Xodus support <a href="http://en.wikipedia.org/wiki/Snapshot_isolation">Snapshot isolation</a> implementing <a href="http://en.wikipedia.org/wiki/Log-structured_file_system">Log-Structured</a> files storage and <a href="http://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a> approach.
             </p>
+            <p>
+                Here is a performance comparison of Xodus and Bekeley DB Java Edition using <a href="http://fallabs.com/tokyocabinet/benchmark.pdf">Tokyo Cabinet Benchmark</a> method with 1000000 keys.
+            </p>
+            <div id="performancechart" class="performancechart"></div>
 
             <h2 id="learn">Learn</h2>
             <p>
                 Link to docs and samples.
-                TODO: performance comparision.
             </p>
 
             <div class="footer">
@@ -110,18 +110,15 @@ env.close();
             </div>
         </div>
 
-
         <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
         <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
         <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shCore.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/SyntaxHighlighter/3.0.83/scripts/shBrushJava.min.js"></script>
 
-        <script src="js/main.js"></script>
+        <script src="http://code.highcharts.com/highcharts.js"></script>
 
-        <script type="text/javascript">
-            SyntaxHighlighter.all()
-        </script>
+        <script src="js/main.js"></script>
 
         <script>
             (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
