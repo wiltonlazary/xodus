@@ -58,25 +58,13 @@
 
             <div class="jumbotron code-sample">
                 <pre class="brush: java; gutter: false">
-Environment env = Environments.newInstance("mydatabase", EnvironmentConfig.DEFAULT);
-
-Store store = env.computeInTransaction(new TransactionalComputable&lt;Store&gt;() {
-    public Store compute(Transaction txn) {
-        return env.openStore("Users", StoreConfiguration.WITHOUT_DUPLICATES, txn);
-    }
-});
+final Environment env = Environments.newInstance("mydatabase");
 
 env.executeInTransaction(new TransactionalExecutable() {
     public void execute(Transaction txn) {
-        store.put(txn, StringBinding.stringToEntry("lvo"),
-                       StringBinding.stringToEntry("jetbrains"));
-    }
-});
-
-env.executeInTransaction(new TransactionalExecutable() {
-    public void execute(Transaction txn) {
-        System.out.println(StringBinding.entryToString(
-                    store.get(txn, StringBinding.stringToEntry("lvo"))));
+        Store store = env.openStore("Users", StoreConfiguration.WITHOUT_DUPLICATES, txn)
+        store.put(txn, stringToEntry("lvo"), stringToEntry("jetbrains"));
+        System.out.println(entryToString(store.get(txn, stringToEntry("lvo"))));
     }
 });
 
