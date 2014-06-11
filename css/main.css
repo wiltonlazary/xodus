@@ -14,6 +14,18 @@ body {
     font-weight: bold;
 }
 
+.fromjetbrains {
+    color: #FF0000;
+    font-size: 14px;
+    font-weight: normal;
+    position: relative;
+    top: -40px;
+}
+
+.fromjetbrains a,  .fromjetbrains a:hover{
+    color: #FF0000;
+}
+
 .jumbotron.code-sample {
     padding: 10px 20px!important;
     background-color: #1B2426!important;
