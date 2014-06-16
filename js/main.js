@@ -17,7 +17,7 @@ $(function () {
     yAxis: {
       min: 0,
       title: {
-        text: 'Operations per Second'
+        text: 'Seconds to Pass Test'
       },
       labels: {
         enabled: false
@@ -49,13 +49,13 @@ $(function () {
       '#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1'],
     series: [{
       name: 'Xodus BTree',
-      data: [Math.round(1000000/0.645), Math.round(1000000/2.47), Math.round(1000000/0.347), Math.round(1000000/5.229)]
+      data: [0.645, 2.47, 0.347, 5.229]
     }, {
       name: 'Xodus Patricia',
-      data: [Math.round(1000000/1.855), Math.round(1000000/2.29), Math.round(1000000/0.745), Math.round(1000000/2.628)]
+      data: [1.855, 2.29, 0.745, 2.628]
     }, {
       name: 'Berkeley DB JE BTree',
-      data: [Math.round(1000000/5.246), Math.round(1000000/8.336), Math.round(1000000/1.027), Math.round(1000000/3.689)]
+      data: [5.246, 8.336, 1.027, 3.689]
     }]
   });
 });
