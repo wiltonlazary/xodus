@@ -17,7 +17,7 @@ $(function () {
     yAxis: {
       min: 0,
       title: {
-        text: 'Keys per Second'
+        text: 'Operations per Second'
       },
       labels: {
         enabled: false
