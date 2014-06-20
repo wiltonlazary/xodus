@@ -58,7 +58,7 @@
 
             <div class="jumbotron code-sample">
                 <pre class="brush: java; gutter: false; toolbar: false;">
-final Environment env = Environments.newInstance("mydatabase");
+final Environment env = Environments.newInstance("myDatabase");
 
 final Store store = env.computeInTransaction(txn ->
     env.openStore("Users", WITHOUT_DUPLICATES, txn));
@@ -89,14 +89,15 @@ env.close();
             <ul>
                 <li>Pure Java</li>
                 <li>Transactional (fully <a href="http://en.wikipedia.org/wiki/ACID">ACID</a>-compliant)</li>
+                <li>Highly Concurrent</li>
                 <li>Schemaless</li>
                 <li>Embedded</li>
             </ul>
             <p>
-                Xodus support <a href="http://en.wikipedia.org/wiki/Snapshot_isolation">Snapshot isolation</a> implementing <a href="http://en.wikipedia.org/wiki/Log-structured_file_system">Log-Structured</a> files storage and <a href="http://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a> approach.
+                Xodus supports <a href="http://en.wikipedia.org/wiki/Snapshot_isolation">Snapshot isolation</a> implementing <a href="http://en.wikipedia.org/wiki/Log-structured_file_system">Log-Structured</a> files storage and <a href="http://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a> approach.
             </p>
             <p>
-                Here is a performance comparison of Xodus and Bekeley DB Java Edition using <a href="http://fallabs.com/tokyocabinet/benchmark.pdf">Tokyo Cabinet Benchmark</a> method with 1000000 keys.
+                Here is performance comparison of Xodus and Berkeley DB JE using <a href="http://fallabs.com/tokyocabinet/benchmark.pdf">Tokyo Cabinet Benchmark</a>with 1000000 keys. <a href="https://github.com/JetBrains/xodus/tree/master/benchmarks-jmh">Benchmark</a> is implemented using <a href="http://openjdk.java.net/projects/code-tools/jmh">OpenJDK JMH</a>.
             </p>
             <div id="performancechart" class="performancechart"></div>
 
