@@ -53,7 +53,7 @@
             <div class="jumbotron">
                 <h1>Xodus<span class="fromjetbrains">by <a href="http://www.jetbrains.com/">JetBrains</a></span></h1>
 
-                <h3>Java Transactional Schemaless Embedded database</h3>
+                <h3>Java Transactional Schema-less Embedded database</h3>
 
                 <p><a href="#download" class="btn btn-primary btn-lg" role="button">Get Started</a></p>
             </div>
@@ -77,47 +77,34 @@ env.close();
             </div>
 
             <h2 id="download">Getting Started</h2>
-            <p>
-                Xodus is licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License, Version 2.0</a>
-            </p>
-            <p>
-                Xodus source code is hosted in <a href="https://github.com/JetBrains/xodus">github repository</a>.
-            </p>
-            <p>
-                Xodus artifacts are available in <a href="https://oss.sonatype.org/content/repositories/snapshots/org/jetbrains/xodus">Maven Central repository</a>.
-            </p>
+            <ul>
+                <li>Xodus is licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License, Version 2.0</a></li>
+                <li>Xodus source code is hosted in <a href="https://github.com/JetBrains/xodus">github</a> repository.</li>
+                <li>Xodus artifacts are available in <a href="https://oss.sonatype.org/content/repositories/snapshots/org/jetbrains/xodus">Maven Central</a> repository.</li>
+            </ul>
 
             <h2 id="features">Features</h2>
             <ul>
                 <li>Pure Java</li>
                 <li>Transactional (fully <a href="http://en.wikipedia.org/wiki/ACID">ACID</a>-compliant)</li>
                 <li>Highly Concurrent</li>
-                <li>Schemaless</li>
+                <li>Schema-less</li>
                 <li>Embedded</li>
             </ul>
             <p>
-                Xodus uses <a href="http://en.wikipedia.org/wiki/Log-structured_file_system">Log-Structured</a> data storage.
-                <a href="http://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a> and <a href="http://en.wikipedia.org/wiki/Snapshot_isolation">Snapshot isolation</a> allow completely non-blocking reads.
+                Xodus uses <a href="http://en.wikipedia.org/wiki/Log-structured_file_system">Log-Structured</a> data storage. Reads are completely non-blocking due to <a href="http://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a> and true <a href="http://en.wikipedia.org/wiki/Snapshot_isolation">Snapshot isolation</a>.
             </p>
             <p>
                 Here is performance comparison of Xodus and Berkeley DB JE using <a href="http://fallabs.com/tokyocabinet/benchmark.pdf">Tokyo Cabinet Benchmark</a> with 1000000 keys. <a href="https://github.com/JetBrains/xodus/tree/master/benchmarks-jmh">Benchmark</a> is implemented using <a href="http://openjdk.java.net/projects/code-tools/jmh">OpenJDK JMH</a>.
             </p>
             <div id="performancechart" class="performancechart"></div>
 
-            <h2 id="learn">Learn More</h2>
-
-            <p>
-                <a href="https://github.com/JetBrains/xodus/wiki">Xodus wiki</a>
-            </p>
-
-            <p>
-                <a href="https://teamcity.jetbrains.com/viewType.html?buildTypeId=Xodus_Build">Check out the latest
-                    (nightly) builds</a>
-            </p>
-
-            <p>
-                <a href="http://xodus.myjetbrains.com/youtrack">Report an issue</a>
-            </p>
+            <h2 id="learn">Find out more</h2>
+            <ul>
+                <li><a href="https://github.com/JetBrains/xodus/wiki">Xodus wiki</a></li>
+                <li><a href="https://teamcity.jetbrains.com/viewType.html?buildTypeId=Xodus_Build">Check out the latest (nightly) builds</a></li>
+                <li><a href="http://xodus.myjetbrains.com/youtrack">Report an issue</a></li>
+            </ul>
 
             <div class="footer">
                 <p>&copy; JetBrains 2014</p>
