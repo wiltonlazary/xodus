@@ -21,6 +21,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 public class Persistent23TreeTest {
@@ -547,6 +548,45 @@ public class Persistent23TreeTest {
             t.printStackTrace();
         }
         Assert.assertTrue(errors.isEmpty());
+    }
+
+    private Thread createWriter(final Persistent23Tree<Integer> t, final CyclicBarrier barrier,
+                                final int itr, final boolean tick) {
+        return new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    barrier.await();
+                } catch (InterruptedException | BrokenBarrierException e) {
+                    return; // checksum won't match
+                }
+                boolean even = true;
+                for (int i = 0; i < itr; i++) {
+                    if (even == tick) {
+                        Persistent23Tree.MutableTree<Integer> tree;
+                        do {
+                            tree = t.beginWrite();
+                            tree.add(i);
+                        } while (!tree.endWrite());
+                    }
+                    even = !even;
+                }
+            }
+        });
+    }
+
+    @Test
+    public void testWriteAtomicity() throws InterruptedException { // for XD-259
+        final Persistent23Tree<Integer> source = new Persistent23Tree<>();
+        final CyclicBarrier barrier = new CyclicBarrier(2);
+        final int itr = 10000;
+        Thread writer1 = createWriter(source, barrier, itr, true);
+        Thread writer2 = createWriter(source, barrier, itr, false);
+        writer1.start();
+        writer2.start();
+        writer1.join();
+        writer2.join();
+        Assert.assertEquals(itr, source.size());
     }
 
     private void rememberError(List<Throwable> errors, Throwable t) {
