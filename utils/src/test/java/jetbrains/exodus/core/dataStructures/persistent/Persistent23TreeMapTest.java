@@ -44,8 +44,8 @@ public class Persistent23TreeMapTest {
         Persistent23TreeMap.MutableMap<Integer, String> write2 = tree.beginWrite();
         write1.put(0, "0");
         write2.remove(1);
-        Assert.assertTrue(write2.endWrite());
-        Assert.assertTrue(write1.endWrite());
+        Assert.assertTrue(tree.endWrite(write2));
+        Assert.assertTrue(tree.endWrite(write1));
         Persistent23TreeMap.ImmutableMap<Integer, String> read = tree.beginRead();
         Assert.assertTrue(read.containsKey(0));
         Assert.assertFalse(read.containsKey(1));
@@ -55,8 +55,8 @@ public class Persistent23TreeMapTest {
 
         write1.put(2, "2");
         write2.put(3, "3");
-        Assert.assertTrue(write1.endWrite());
-        Assert.assertFalse(write2.endWrite());
+        Assert.assertTrue(tree.endWrite(write1));
+        Assert.assertFalse(tree.endWrite(write2));
         Assert.assertTrue(read.containsKey(0));
         Assert.assertFalse(read.containsKey(1));
         Assert.assertFalse(read.containsKey(2));
@@ -75,8 +75,8 @@ public class Persistent23TreeMapTest {
         root = write2.getRoot();
         write2.put(2, "_2");
         Assert.assertFalse(write2.getRoot() == root);
-        Assert.assertTrue(write1.endWrite());
-        Assert.assertFalse(write2.endWrite());
+        Assert.assertTrue(tree.endWrite(write1));
+        Assert.assertFalse(tree.endWrite(write2));
         read = tree.beginRead();
         Assert.assertTrue(read.containsKey(0));
         Assert.assertFalse(read.containsKey(1));
@@ -237,7 +237,7 @@ public class Persistent23TreeMapTest {
         for (int i = 0; i < p.length; i++) {
             if ((i & 15) == 0) {
                 if (i > 0) {
-                    tree.endWrite();
+                    source.endWrite(tree);
                     Assert.assertEquals(i, source.beginRead().size());
                 }
                 tree = source.beginWrite();
@@ -250,7 +250,7 @@ public class Persistent23TreeMapTest {
                 Assert.assertEquals(i + 1, tree.size());
             }
         }
-        tree.endWrite();
+        source.endWrite(tree);
         Assert.assertEquals(p.length, source.beginRead().size());
 
         p = genPermutation(random, p.length);
@@ -258,7 +258,7 @@ public class Persistent23TreeMapTest {
         for (int i = 0; i < p.length; i++) {
             if ((i & 15) == 0) {
                 if (i > 0) {
-                    tree.endWrite();
+                    source.endWrite(tree);
                     Assert.assertEquals(p.length - i, source.beginRead().size());
                 }
                 tree = source.beginWrite();
@@ -271,7 +271,7 @@ public class Persistent23TreeMapTest {
                 Assert.assertEquals(p.length - i - 1, tree.size());
             }
         }
-        tree.endWrite();
+        source.endWrite(tree);
         Assert.assertEquals(0, source.beginRead().size());
     }
 
@@ -308,7 +308,7 @@ public class Persistent23TreeMapTest {
         removeEntries(random, write, count);
         Assert.assertEquals(0, write.size());
         Assert.assertTrue(write.isEmpty());
-        Assert.assertTrue(write.endWrite());
+        Assert.assertTrue(map.endWrite(write));
     }
 
     private static void addEntries(Random random, Persistent23TreeMap.MutableMap<Integer, String> tree, int count) {

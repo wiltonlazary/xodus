@@ -50,8 +50,8 @@ public class Persistent23TreeTest {
         Persistent23Tree.MutableTree<Integer> write2 = tree.beginWrite();
         write1.add(0);
         write2.exclude(1);
-        Assert.assertTrue(write2.endWrite());
-        Assert.assertTrue(write1.endWrite());
+        Assert.assertTrue(tree.endWrite(write2));
+        Assert.assertTrue(tree.endWrite(write1));
         Persistent23Tree.ImmutableTree<Integer> read = tree.beginRead();
         Assert.assertTrue(read.contains(0));
         Assert.assertFalse(read.contains(1));
@@ -61,8 +61,8 @@ public class Persistent23TreeTest {
 
         write1.add(2);
         write2.add(3);
-        Assert.assertTrue(write1.endWrite());
-        Assert.assertFalse(write2.endWrite());
+        Assert.assertTrue(tree.endWrite(write1));
+        Assert.assertFalse(tree.endWrite(write2));
         Assert.assertTrue(read.contains(0));
         Assert.assertFalse(read.contains(1));
         Assert.assertFalse(read.contains(2));
@@ -79,8 +79,8 @@ public class Persistent23TreeTest {
         write1.add(2);
         Assert.assertFalse(write1.getRoot() == root);
         write2.add(3);
-        Assert.assertTrue(write1.endWrite());
-        Assert.assertFalse(write2.endWrite());
+        Assert.assertTrue(tree.endWrite(write1));
+        Assert.assertFalse(tree.endWrite(write2));
         read = tree.beginRead();
         Assert.assertTrue(read.contains(0));
         Assert.assertFalse(read.contains(1));
@@ -312,7 +312,7 @@ public class Persistent23TreeTest {
         for (int i = 0; i < BENCHMARK_SIZE; i++) {
             tree.add(i);
         }
-        Assert.assertTrue(tree.endWrite());
+        Assert.assertTrue(source.endWrite(tree));
         System.gc();
         System.gc();
         System.gc();
@@ -353,7 +353,7 @@ public class Persistent23TreeTest {
             public void remove() {
             }
         }, BENCHMARK_SIZE);
-        Assert.assertTrue(tree.endWrite());
+        Assert.assertTrue(source.endWrite(tree));
         System.gc();
         System.out.print("Memory used: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()));
         final Persistent23Tree.ImmutableTree<Integer> current = source.beginRead();
@@ -381,7 +381,7 @@ public class Persistent23TreeTest {
                 min = key;
             }
         }
-        Assert.assertTrue(tree.endWrite());
+        Assert.assertTrue(source.endWrite(tree));
         System.gc();
         System.gc();
         System.gc();
@@ -406,7 +406,7 @@ public class Persistent23TreeTest {
         for (int i = MAX_KEY; i >= 0; --i) {
             tree.add(i);
         }
-        Assert.assertTrue(tree.endWrite());
+        Assert.assertTrue(source.endWrite(tree));
         System.gc();
         System.gc();
         System.gc();
@@ -434,7 +434,7 @@ public class Persistent23TreeTest {
         for (int i = 0; i < p.length; i++) {
             if ((i & 15) == 0) {
                 if (i > 0) {
-                    tree.endWrite();
+                    source.endWrite(tree);
                 }
                 tree = source.beginWrite();
             }
@@ -454,7 +454,7 @@ public class Persistent23TreeTest {
         for (int i = 0; i < p.length; i++) {
             if ((i & 15) == 0) {
                 if (i > 0) {
-                    tree.endWrite();
+                    source.endWrite(tree);
                     Assert.assertEquals(i, source.size());
                 }
                 tree = source.beginWrite();
@@ -467,7 +467,7 @@ public class Persistent23TreeTest {
                 Assert.assertEquals(i + 1, tree.size());
             }
         }
-        tree.endWrite();
+        source.endWrite(tree);
         Assert.assertEquals(p.length, source.size());
 
         p = genPermutation(random, p.length);
@@ -475,7 +475,7 @@ public class Persistent23TreeTest {
         for (int i = 0; i < p.length; i++) {
             if ((i & 15) == 0) {
                 if (i > 0) {
-                    tree.endWrite();
+                    source.endWrite(tree);
                     Assert.assertEquals(p.length - i, source.size());
                 }
                 tree = source.beginWrite();
@@ -488,7 +488,7 @@ public class Persistent23TreeTest {
                 Assert.assertEquals(p.length - i - 1, tree.size());
             }
         }
-        tree.endWrite();
+        source.endWrite(tree);
         Assert.assertEquals(0, source.size());
     }
 
@@ -515,7 +515,7 @@ public class Persistent23TreeTest {
                             tree.exclude(2);
                             even = true;
                         }
-                        tree.endWrite();
+                        source.endWrite(tree);
                     }
                 } catch (Throwable t) {
                     rememberError(errors, t);
@@ -567,7 +567,7 @@ public class Persistent23TreeTest {
                         do {
                             tree = t.beginWrite();
                             tree.add(i);
-                        } while (!tree.endWrite());
+                        } while (!t.endWrite(tree));
                     }
                     even = !even;
                 }
@@ -602,7 +602,7 @@ public class Persistent23TreeTest {
         removeEntries(random, tree, count);
         Assert.assertEquals(0, tree.size());
         Assert.assertTrue(tree.isEmpty());
-        Assert.assertTrue(tree.endWrite());
+        Assert.assertTrue(set.endWrite(tree));
     }
 
     private static void addEntries(Random random, Persistent23Tree.MutableTree<Integer> tree, int count) {

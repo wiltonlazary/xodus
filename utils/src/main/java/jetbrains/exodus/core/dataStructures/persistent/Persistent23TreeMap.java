@@ -75,7 +75,7 @@ public class Persistent23TreeMap<K extends Comparable<K>, V> {
     public static class MutableMap<K extends Comparable<K>, V> extends Persistent23Tree.MutableTree<Entry<K, V>> {
 
         MutableMap(Persistent23Tree<Entry<K, V>> set) {
-            super(set);
+            super(set.getRoot());
         }
 
         public V get(@NotNull K key) {

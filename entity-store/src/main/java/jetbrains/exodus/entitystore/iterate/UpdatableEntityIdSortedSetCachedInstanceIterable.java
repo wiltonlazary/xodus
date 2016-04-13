@@ -59,7 +59,7 @@ public class UpdatableEntityIdSortedSetCachedInstanceIterable extends UpdatableC
                     }
                     mutableLocalIds.put(entityId.getLocalId(), EMPTY_IDS);
                 } while (it.hasNext());
-                mutableLocalIds.endWrite();
+                localIds.endWrite(mutableLocalIds);
             }
         } finally {
             it.disposeIfShouldBe();
@@ -171,7 +171,7 @@ public class UpdatableEntityIdSortedSetCachedInstanceIterable extends UpdatableC
 
     @Override
     public void endUpdate() {
-        checkMutableIds().endWrite();
+        localIds.endWrite(checkMutableIds());
         mutableLocalIds = null;
     }
 

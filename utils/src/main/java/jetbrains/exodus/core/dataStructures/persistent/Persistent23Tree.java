@@ -45,14 +45,15 @@ public class Persistent23Tree<K extends Comparable<K>> extends AbstractPersisten
     }
 
     public MutableTree<K> beginWrite() {
-        return new MutableTree<>(this);
+        return new MutableTree<>(root);
     }
 
-    boolean endWrite(MutableTree<K> tree) {
+    public boolean endWrite(MutableTree<K> tree) {
         if (root != tree.getStartingRoot()) {
             return false;
         }
         root = tree.getRoot();
+        tree.setStartingRoot(root);
         return true;
     }
 
@@ -64,7 +65,7 @@ public class Persistent23Tree<K extends Comparable<K>> extends AbstractPersisten
 
         private final RootNode<K> root;
 
-        ImmutableTree(RootNode<K> root) {
+        ImmutableTree(@Nullable RootNode<K> root) {
             this.root = root;
         }
 
@@ -77,14 +78,12 @@ public class Persistent23Tree<K extends Comparable<K>> extends AbstractPersisten
 
     public static class MutableTree<K extends Comparable<K>> extends AbstractPersistent23Tree<K> {
 
-        private final Persistent23Tree<K> baseTree;
         private RootNode<K> startingRoot;
         private RootNode<K> root;
 
-        MutableTree(@NotNull Persistent23Tree<K> tree) {
-            startingRoot = tree.getRoot();
-            root = startingRoot;
-            baseTree = tree;
+        MutableTree(@Nullable RootNode<K> root) {
+            this.startingRoot = root;
+            this.root = root;
         }
 
         public void add(@NotNull K key) {
@@ -128,19 +127,6 @@ public class Persistent23Tree<K extends Comparable<K>> extends AbstractPersisten
                 throw new UnsupportedOperationException();
             }
             root = makeRootNode(keys, size, 1);
-        }
-
-        /**
-         * Try to merge changes into the base tree.
-         *
-         * @return true if merging succeeded
-         */
-        public boolean endWrite() {
-            if (baseTree.endWrite(this)) {
-                startingRoot = root;
-                return true;
-            }
-            return false;
         }
 
         /**
@@ -245,8 +231,12 @@ public class Persistent23Tree<K extends Comparable<K>> extends AbstractPersisten
             root = node;
         }
 
-        Node<K> getStartingRoot() {
+        RootNode<K> getStartingRoot() {
             return startingRoot;
+        }
+
+        void setStartingRoot(RootNode<K> root) {
+            this.startingRoot = root;
         }
 
         void checkTip() {

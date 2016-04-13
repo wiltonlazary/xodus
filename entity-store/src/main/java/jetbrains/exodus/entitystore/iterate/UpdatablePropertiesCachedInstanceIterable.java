@@ -78,7 +78,7 @@ public class UpdatablePropertiesCachedInstanceIterable extends UpdatableCachedIn
                 }
                 final Persistent23Tree.MutableTree<IndexEntry> mutableTree = index.beginWrite();
                 mutableTree.addAll(tempList, tempList.size());
-                mutableTree.endWrite();
+                index.endWrite(mutableTree);
             }
         } finally {
             ((EntityIteratorBase) it).disposeIfShouldBe();
@@ -114,11 +114,11 @@ public class UpdatablePropertiesCachedInstanceIterable extends UpdatableCachedIn
     }
 
     public void endUpdate() {
-        Persistent23Tree.MutableTree<IndexEntry> index = mutableIndex;
-        if (index == null) {
+        Persistent23Tree.MutableTree<IndexEntry> mutable = mutableIndex;
+        if (mutable == null) {
             throw new IllegalStateException("UpdatablePropertiesCachedInstanceIterable was not mutated");
         }
-        index.endWrite();
+        index.endWrite(mutable);
         mutableIndex = null;
     }
 

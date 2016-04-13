@@ -87,8 +87,8 @@ public class ConcurrentStablePriorityQueue<P extends Comparable<? super P>, E> e
             mutableValues.add(idNode);
             // commit trees and then try to commit pair of trees
             // no need to check endWrite() results since they commit cloned trees
-            mutableQueue.endWrite();
-            mutableValues.endWrite();
+            queue.endWrite(mutableQueue);
+            values.endWrite(mutableValues);
             newPair = new Pair<>(queue, values);
             // commit pair if no other pair was already committed
         } while (!rootPair.compareAndSet(currentPair, newPair));
@@ -143,7 +143,7 @@ public class ConcurrentStablePriorityQueue<P extends Comparable<? super P>, E> e
             result = max.value;
             // commit trees and then try to commit pair of trees
             // no need to check endWrite() results since they commit cloned trees
-            mutableQueue.endWrite();
+            queue.endWrite(mutableQueue);
             mutableValues.endWrite();
             // if the queue becomes empty the newPair reference can be null
             newPair = queue.isEmpty() ? null :

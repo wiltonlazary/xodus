@@ -79,9 +79,10 @@ public class PersistentLinkedHashMap<K, V> {
             return false;
         }
         mutableMap.getMapMutable().endWrite();
-        mutableMap.getQueueMutable().endWrite();
+        PersistentLong23TreeMap<K> queue = mutableMap.getQueue();
+        queue.endWrite(mutableMap.getQueueMutable());
         root = new Pair<>(
-                mutableMap.getMap(), mutableMap.getQueue());
+                mutableMap.getMap(), queue);
         return true;
     }
 

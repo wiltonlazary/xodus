@@ -74,7 +74,7 @@ public class EnvironmentTestInMemory extends EnvironmentTest {
                     deleteRandomKey(primary, secondary, txn, keysCount, mutableMap);
                 }
                 if (txn.flush()) {
-                    mutableMap.endWrite();
+                    testMap.endWrite(mutableMap);
                 }
             } catch (Throwable t) {
                 logger.error("Failed to put", t);

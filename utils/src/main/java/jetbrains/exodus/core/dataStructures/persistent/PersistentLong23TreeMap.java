@@ -75,7 +75,7 @@ public class PersistentLong23TreeMap<V> {
     public class MutableMap extends Persistent23Tree.MutableTree<Entry<V>> {
 
         MutableMap() {
-            super(set);
+            super(set.getRoot());
         }
 
         public V get(long key) {
