@@ -6,7 +6,7 @@ $(function () {
             type: 'bar'
         },
         title: {
-            text: 'Comparison of Xodus, Oracle Berkeley DB JE, MapDB abd Chronicle Map'
+            text: 'Comparison of Xodus, Oracle Berkeley DB JE, MapDB and Chronicle Map'
         },
         xAxis: {
             categories: ['Successive write', 'Random Write', 'Successive read', 'Random read'],
