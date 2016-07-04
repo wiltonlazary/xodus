@@ -60,17 +60,17 @@
 
             <div class="jumbotron code-sample">
                 <pre class="brush: java; gutter: false; toolbar: false;">
-final Environment env = Environments.newInstance("myDatabase");
+final Environment env = Environments.newInstance("/home/me/.myAppData");
 
 final Store store = env.computeInTransaction(txn ->
-    env.openStore("Users", WITHOUT_DUPLICATES, txn));
+    env.openStore("Messages", WITHOUT_DUPLICATES, txn));
     
 env.executeInTransaction((txn) -> 
-   { store.put(txn, stringToEntry("lvo"),
-                    stringToEntry("jetbrains")); });
+   { store.put(txn, stringToEntry("Hello"),
+                    stringToEntry("World!")); });
 
 out.println(env.computeInTransaction(txn ->
-    entryToString(store.get(txn, stringToEntry("lvo")))));
+    entryToString(store.get(txn, stringToEntry("Hello")))));
 
 env.close();
             </pre>
@@ -80,7 +80,10 @@ env.close();
             <ul>
                 <li>Xodus is licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License, Version 2.0</a></li>
                 <li>Xodus source code is hosted in <a href="https://github.com/JetBrains/xodus">github</a> repository.</li>
-                <li>Xodus artifacts are available in <a href="https://oss.sonatype.org/content/repositories/snapshots/org/jetbrains/xodus">Maven Central</a> repository.</li>
+                <li>Xodus artifacts are available in <a
+                        href="https://oss.sonatype.org/content/repositories/snapshots/org/jetbrains/xodus">Maven
+                    Central</a>.
+                </li>
             </ul>
 
             <h2 id="features">Features</h2>
@@ -110,7 +113,7 @@ env.close();
             </ul>
 
             <div class="footer">
-                <p>&copy; JetBrains 2014</p>
+                <p>&copy; JetBrains 2016</p>
             </div>
         </div>
 

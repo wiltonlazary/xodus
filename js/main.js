@@ -6,7 +6,7 @@ $(function () {
             type: 'bar'
         },
         title: {
-            text: 'Comparison of Xodus, Oracle Berkeley DB JE and MapDB'
+            text: 'Comparison of Xodus, Oracle Berkeley DB JE, MapDB abd Chronicle Map'
         },
         xAxis: {
             categories: ['Successive write', 'Random Write', 'Successive read', 'Random read'],
@@ -49,16 +49,19 @@ $(function () {
             '#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1'],
         series: [{
             name: 'Xodus BTree',
-            data: [0.797, 2.275, 0.128, 2.625]
+            data: [0.699, 2.208, 0.117, 2.692]
         }, {
             name: 'Xodus Patricia',
-            data: [0.801, 1.666, 0.307, 1.319]
+            data: [0.777, 1.661, 0.292, 1.289]
         }, {
             name: 'Berkeley DB JE BTree',
-            data: [3.942, 6.544, 1.728, 3.411]
+            data: [3.441, 5.844, 1.252, 3.208]
         }, {
             name: 'MapDB TreeMap',
-            data: [27.019, 22.159, 0.293, 6.897]
+            data: [26.588, 21.822, 0.274, 6.705]
+        }, {
+            name: "Chronicle Map",
+            data: [1.184, 1.238, 0.098, 0.829]
         }]
     });
 });
