@@ -97,7 +97,7 @@ env.close();
                 Xodus uses <a href="http://en.wikipedia.org/wiki/Log-structured_file_system">Log-Structured</a> data storage. Reads are completely non-blocking due to <a href="http://en.wikipedia.org/wiki/Multiversion_concurrency_control">MVCC</a> and true <a href="http://en.wikipedia.org/wiki/Snapshot_isolation">Snapshot isolation</a>.
             </p>
             <p>
-                Here is performance comparison of Xodus, Berkeley DB JE and MapDB using <a
+                Here is performance comparison of Xodus, Berkeley DB JE, MapDB and Chronicle Map using<a
                     href="http://fallabs.com/tokyocabinet/benchmark.pdf">Tokyo Cabinet Benchmark</a> with 1000000 keys.
                 <a href="https://github.com/JetBrains/xodus/tree/master/benchmarks-jmh">Benchmark</a> is implemented
                 using <a href="http://openjdk.java.net/projects/code-tools/jmh">OpenJDK JMH</a>.
