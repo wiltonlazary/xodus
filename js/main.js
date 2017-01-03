@@ -6,10 +6,10 @@ $(function () {
             type: 'bar'
         },
         title: {
-            text: 'Comparison of Xodus, Oracle Berkeley DB JE, MapDB and Chronicle Map'
+            text: 'Comparison of Xodus, Oracle Berkeley DB JE, MapDb, Chronicle Map and H2 MVStore'
         },
         xAxis: {
-            categories: ['Successive write', 'Random Write', 'Successive read', 'Random read'],
+            categories: ['Random read', 'Successive read', 'Random Write', 'Successive write'],
             title: {
                 text: null
             }
@@ -48,20 +48,23 @@ $(function () {
         colors: ['red', '#434348', 'lightgray', '#f7a35c', '#8085e9',
             '#f15c80', '#e4d354', '#8085e8', '#8d4653', '#91e8e1'],
         series: [{
-            name: 'Xodus BTree',
-            data: [0.691, 2.208, 0.087, 2.301]
-        }, {
             name: 'Xodus Patricia',
-            data: [0.769, 1.667, 0.271, 1.189]
+            data: [1.151, 0.273, 1.573, 0.670]
+        }, {
+            name: 'Xodus BTree',
+            data: [2.200, 0.098, 2.009, 0.542]
         }, {
             name: 'Berkeley DB JE BTree',
-            data: [3.441, 5.844, 1.252, 3.208]
+            data: [3.288, 1.251, 5.937, 3.416]
         }, {
             name: 'MapDB TreeMap',
-            data: [26.588, 21.822, 0.274, 6.705]
+            data: [7.162, 0.121, 9.252, 11.357]
         }, {
             name: "Chronicle Map",
-            data: [1.184, 1.238, 0.098, 0.829]
+            data: [0.536, 0.093, 0.807, 0.705]
+        }, {
+            name: "H2 MVStore Map",
+            data: [13.140, 0.105, 1.831, 0.479]
         }]
     });
 });
