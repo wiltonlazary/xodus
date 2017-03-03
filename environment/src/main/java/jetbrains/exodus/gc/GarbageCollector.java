@@ -28,6 +28,7 @@ import jetbrains.exodus.io.RemoveBlockType;
 import jetbrains.exodus.log.*;
 import jetbrains.exodus.util.DeferredIO;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -197,6 +198,10 @@ public final class GarbageCollector {
         return env.getLog();
     }
 
+    long getStartTime() {
+        return env.getCreated() + ec.getGcStartIn();
+    }
+
     /**
      * Cleans fragmented files. It is expected that the files are sorted by utilization, i.e.
      * the first files are more fragmented. In order to avoid race conditions and synchronization issues,
@@ -252,15 +257,25 @@ public final class GarbageCollector {
         }
     }
 
+    static void loggingError(@NotNull final String message, @Nullable final Throwable t) {
+        if (logger.isErrorEnabled()) {
+            if (t == null) {
+                logger.error(message);
+            } else {
+                logger.error(message, t);
+            }
+        }
+    }
+
     private boolean doCleanFiles(@NotNull final Iterator<Long> fragmentedFiles) {
         // if there are no more files then even don't start a txn
         if (!fragmentedFiles.hasNext()) {
             return true;
         }
         final LongSet cleanedFiles = new LongHashSet();
-        final TransactionImpl txn;
+        final ReadWriteTransaction txn;
         try {
-            txn = useRegularTxn ? (TransactionImpl) env.beginTransaction() : env.beginGCTransaction();
+            txn = useRegularTxn ? (ReadWriteTransaction) env.beginTransaction() : env.beginGCTransaction();
         } catch (TransactionAcquireTimeoutException ignore) {
             return false;
         }
@@ -328,7 +343,7 @@ public final class GarbageCollector {
      * @param fileAddress address of the file to clean
      * @param txn         transaction
      */
-    private void cleanSingleFile(final long fileAddress, @NotNull final TransactionImpl txn) {
+    private void cleanSingleFile(final long fileAddress, @NotNull final ReadWriteTransaction txn) {
         // the file can be already cleaned
         if (isFileCleaned(fileAddress)) {
             throw new ExodusException("Attempt to clean already cleaned file");
@@ -339,8 +354,8 @@ public final class GarbageCollector {
             final long high = log.getHighAddress();
             final long highFile = log.getHighFileAddress();
             logger.debug(String.format(
-                    "Cleaner acquired txn when log high address was: %d (%s@%d) when cleaning file %s",
-                    high, LogUtil.getLogFilename(highFile), high - highFile, LogUtil.getLogFilename(fileAddress)
+                "Cleaner acquired txn when log high address was: %d (%s@%d) when cleaning file %s",
+                high, LogUtil.getLogFilename(highFile), high - highFile, LogUtil.getLogFilename(fileAddress)
             ));
         }
         try {

@@ -17,7 +17,6 @@ package jetbrains.exodus.gc;
 
 import jetbrains.exodus.bindings.LongBinding;
 import jetbrains.exodus.core.dataStructures.Pair;
-import jetbrains.exodus.core.dataStructures.Priority;
 import jetbrains.exodus.core.dataStructures.hash.LongHashMap;
 import jetbrains.exodus.core.execution.Job;
 import jetbrains.exodus.env.*;
@@ -25,6 +24,7 @@ import jetbrains.exodus.log.*;
 import jetbrains.exodus.tree.LongIterator;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.*;
 
 public final class UtilizationProfile {
@@ -71,35 +71,38 @@ public final class UtilizationProfile {
      * Loads utilization profile.
      */
     public void load() {
-        if (env.getEnvironmentConfig().getGcUtilizationFromScratch()) {
+        final EnvironmentConfig ec = env.getEnvironmentConfig();
+        if (ec.getGcUtilizationFromScratch()) {
             computeUtilizationFromScratch();
         } else {
-            env.executeInReadonlyTransaction(new TransactionalExecutable() {
-                @Override
-                public void execute(@NotNull final Transaction txn) {
-                    if (!env.storeExists(GarbageCollector.UTILIZATION_PROFILE_STORE_NAME, txn)) {
-                        computeUtilizationFromScratch();
-                    } else {
-                        final LongHashMap<MutableLong> filesUtilization = new LongHashMap<>();
-                        final StoreImpl store = env.openStore(GarbageCollector.UTILIZATION_PROFILE_STORE_NAME, StoreConfig.WITHOUT_DUPLICATES, txn);
-                        try (Cursor cursor = store.openCursor(txn)) {
-                            while (cursor.getNext()) {
-                                final long fileAddress = LongBinding.compressedEntryToLong(cursor.getKey());
-                                final long freeBytes = CompressedUnsignedLongByteIterable.getLong(cursor.getValue());
-                                filesUtilization.put(fileAddress, new MutableLong(freeBytes));
+            final String storedUtilization = ec.getGcUtilizationFromFile();
+            if (!storedUtilization.isEmpty()) {
+                loadUtilizationFromFile(storedUtilization);
+            } else {
+                env.executeInReadonlyTransaction(new TransactionalExecutable() {
+                    @Override
+                    public void execute(@NotNull final Transaction txn) {
+                        if (!env.storeExists(GarbageCollector.UTILIZATION_PROFILE_STORE_NAME, txn)) {
+                            computeUtilizationFromScratch();
+                        } else {
+                            final LongHashMap<MutableLong> filesUtilization = new LongHashMap<>();
+                            final StoreImpl store = env.openStore(GarbageCollector.UTILIZATION_PROFILE_STORE_NAME, StoreConfig.WITHOUT_DUPLICATES, txn);
+                            try (Cursor cursor = store.openCursor(txn)) {
+                                while (cursor.getNext()) {
+                                    final long fileAddress = LongBinding.compressedEntryToLong(cursor.getKey());
+                                    final long freeBytes = CompressedUnsignedLongByteIterable.getLong(cursor.getValue());
+                                    filesUtilization.put(fileAddress, new MutableLong(freeBytes));
+                                }
                             }
-                        }
-                        synchronized (UtilizationProfile.this.filesUtilization) {
-                            UtilizationProfile.this.filesUtilization.clear();
-                            UtilizationProfile.this.filesUtilization.putAll(filesUtilization);
+                            synchronized (UtilizationProfile.this.filesUtilization) {
+                                UtilizationProfile.this.filesUtilization.clear();
+                                UtilizationProfile.this.filesUtilization.putAll(filesUtilization);
+                            }
+                            estimateFreeBytesAndWakeGcIfNecessary();
                         }
                     }
-                }
-            });
-        }
-        estimateTotalBytes();
-        if (gc.isTooMuchFreeSpace()) {
-            gc.wake();
+                });
+            }
         }
     }
 
@@ -109,7 +112,7 @@ public final class UtilizationProfile {
     public void save(@NotNull final Transaction txn) {
         if (isDirty) {
             final StoreImpl store = env.openStore(GarbageCollector.UTILIZATION_PROFILE_STORE_NAME,
-                    StoreConfig.WITHOUT_DUPLICATES, txn);
+                StoreConfig.WITHOUT_DUPLICATES, txn);
             // clear entries for already deleted files
             try (Cursor cursor = store.openCursor(txn)) {
                 while (cursor.getNext()) {
@@ -130,8 +133,8 @@ public final class UtilizationProfile {
             }
             for (final Map.Entry<Long, MutableLong> entry : filesUtilization) {
                 store.put(txn,
-                        LongBinding.longToCompressedEntry(entry.getKey()),
-                        CompressedUnsignedLongByteIterable.getIterable(entry.getValue().value));
+                    LongBinding.longToCompressedEntry(entry.getKey()),
+                    CompressedUnsignedLongByteIterable.getIterable(entry.getValue().value));
             }
         }
     }
@@ -163,7 +166,7 @@ public final class UtilizationProfile {
     /**
      * Updates utilization profile with new expired loggables.
      *
-     * @param loggables                expired loggables.
+     * @param loggables expired loggables.
      */
     void fetchExpiredLoggables(@NotNull final Iterable<ExpiredLoggableInfo> loggables) {
         long prevFileAddress = -1L;
@@ -246,7 +249,7 @@ public final class UtilizationProfile {
             @Override
             public boolean hasNext() {
                 return !fragmentedFiles.isEmpty() &&
-                        totalFreeBytes[0] > totalCleanableBytes[0] * gc.getMaximumFreeSpacePercent() / 100L;
+                    totalFreeBytes[0] > totalCleanableBytes[0] * gc.getMaximumFreeSpacePercent() / 100L;
             }
 
             @Override
@@ -264,10 +267,40 @@ public final class UtilizationProfile {
     }
 
     /**
+     * Loads utilization profile from file.
+     *
+     * @param path external file with utilization info in the format as created by the {@code "-d"} option
+     *             of the {@code Reflect} tool
+     * @see EnvironmentConfig#setGcUtilizationFromFile(String)
+     */
+    public void loadUtilizationFromFile(@NotNull final String path) {
+        gc.getCleaner().getJobProcessor().queueAt(new Job() {
+            @Override
+            protected void execute() throws Throwable {
+                final LongHashMap<Long> usedSpace = new LongHashMap<>();
+                try {
+                    try (Scanner scanner = new Scanner(new File(path))) {
+                        while (scanner.hasNextLong()) {
+                            final long address = scanner.nextLong();
+                            final Long usedBytes = scanner.nextLong();
+                            usedSpace.put(address, usedBytes);
+                        }
+                    }
+                } catch (Throwable t) {
+                    GarbageCollector.loggingError("Failed to load utilization from " + path, t);
+                }
+                // if an error occurs during reading the file, then GC will be too pessimistic, i.e. it will clean
+                // first the files which are missed in the utilization profile.
+                setUtilization(usedSpace);
+            }
+        }, gc.getStartTime());
+    }
+
+    /**
      * Reloads utilization profile.
      */
-    private void computeUtilizationFromScratch() {
-        gc.getCleaner().getJobProcessor().queue(new Job() {
+    public void computeUtilizationFromScratch() {
+        gc.getCleaner().getJobProcessor().queueAt(new Job() {
             @Override
             protected void execute() throws Throwable {
                 final LongHashMap<Long> usedSpace = new LongHashMap<>();
@@ -291,14 +324,26 @@ public final class UtilizationProfile {
                         }
                     }
                 });
-                synchronized (filesUtilization) {
-                    filesUtilization.clear();
-                    for (final Map.Entry<Long, Long> entry : usedSpace.entrySet()) {
-                        filesUtilization.put(entry.getKey(), new MutableLong(fileSize - entry.getValue()));
-                    }
-                }
+                setUtilization(usedSpace);
             }
-        }, Priority.highest);
+        }, gc.getStartTime());
+    }
+
+    private void setUtilization(LongHashMap<Long> usedSpace) {
+        synchronized (filesUtilization) {
+            filesUtilization.clear();
+            for (final Map.Entry<Long, Long> entry : usedSpace.entrySet()) {
+                filesUtilization.put(entry.getKey(), new MutableLong(fileSize - entry.getValue()));
+            }
+        }
+        estimateFreeBytesAndWakeGcIfNecessary();
+    }
+
+    private void estimateFreeBytesAndWakeGcIfNecessary() {
+        estimateTotalBytes();
+        if (gc.isTooMuchFreeSpace()) {
+            gc.wake();
+        }
     }
 
     /**

@@ -16,15 +16,22 @@
 package jetbrains.exodus.query.metadata;
 
 import jetbrains.exodus.core.dataStructures.hash.HashMap;
+import jetbrains.exodus.core.dataStructures.hash.HashSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ModelMetaDataImpl implements ModelMetaData {
 
-    private Set<EntityMetaData> entityMetaDatas = new HashSet<>();
-    private Map<String, AssociationMetaData> associationMetaDatas = new HashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(ModelMetaDataImpl.class);
+    private static final boolean LOG_RESET = Boolean.getBoolean("jetbrains.exodus.query.metadata.logReset");
+
+    private final Set<EntityMetaData> entityMetaDatas = Collections.newSetFromMap(new ConcurrentHashMap<EntityMetaData, Boolean>());
+    private final Map<String, AssociationMetaData> associationMetaDatas = new ConcurrentHashMap<>();
     private volatile Map<String, EntityMetaData> typeToEntityMetaDatas = null;
 
     public void init() {
@@ -33,11 +40,11 @@ public class ModelMetaDataImpl implements ModelMetaData {
     }
 
     public void setEntityMetaDatas(@NotNull Set<EntityMetaData> entityMetaDatas) {
-        this.entityMetaDatas = entityMetaDatas;
+        this.entityMetaDatas.clear();
+        this.entityMetaDatas.addAll(entityMetaDatas);
         for (EntityMetaData emd : entityMetaDatas) {
             ((EntityMetaDataImpl) emd).setModelMetaData(this);
         }
-        // init();
     }
 
     public void setAssociationMetaDatas(Set<AssociationMetaData> associationMetaDatas) {
@@ -53,31 +60,39 @@ public class ModelMetaDataImpl implements ModelMetaData {
     }
 
     void reset() {
-        typeToEntityMetaDatas = null;
+        if (LOG_RESET) {
+            logger.info("ModelMetaDataImpl#reset() invoked in thread " + Thread.currentThread(), new Throwable());
+        }
+        synchronized (entityMetaDatas) {
+            typeToEntityMetaDatas = null;
+        }
     }
 
-    void update() {
-        if (typeToEntityMetaDatas != null) {
-            return;
+    @NotNull
+    Map<String, EntityMetaData> update() {
+        Map<String, EntityMetaData> result = typeToEntityMetaDatas;
+        if (result != null) {
+            return result;
         }
 
-        synchronized (this) {
-            if (typeToEntityMetaDatas != null) {
-                return;
+        synchronized (entityMetaDatas) {
+            result = typeToEntityMetaDatas;
+            if (result != null) {
+                return result;
             }
-            final HashMap<String, EntityMetaData> typeToEntityMetaDatas = new HashMap<>();
+            result = new HashMap<>();
 
             for (final EntityMetaData emd : entityMetaDatas) {
                 ((EntityMetaDataImpl) emd).reset();
 
                 final String type = emd.getType();
-                if (typeToEntityMetaDatas.get(type) != null) {
+                if (result.get(type) != null) {
                     throw new IllegalArgumentException("Duplicate entity [" + type + ']');
                 }
-                typeToEntityMetaDatas.put(type, emd);
+                result.put(type, emd);
             }
 
-            this.typeToEntityMetaDatas = typeToEntityMetaDatas;
+            this.typeToEntityMetaDatas = result;
 
             for (EntityMetaData emd : entityMetaDatas) {
                 final EntityMetaDataImpl impl = (EntityMetaDataImpl) emd;
@@ -95,7 +110,7 @@ public class ModelMetaDataImpl implements ModelMetaData {
                 final boolean wasNull = ends == null;
                 String superType = emd.getSuperType();
                 while (superType != null) {
-                    EntityMetaData parent = typeToEntityMetaDatas.get(superType);
+                    EntityMetaData parent = result.get(superType);
                     Set<AssociationEndMetaData> parentEnds = ((EntityMetaDataImpl) parent).getExternalAssociationEnds();
                     if (parentEnds != null) {
                         if (ends == null) {
@@ -116,11 +131,11 @@ public class ModelMetaDataImpl implements ModelMetaData {
                 // add subtype
                 final String superType = emd.getSuperType();
                 if (superType != null) {
-                    addSubTypeToMetaData(emd, superType);
+                    addSubTypeToMetaData(result, emd, superType);
                 }
                 // add interface types
                 for (String iFaceType : emd.getInterfaceTypes()) {
-                    addSubTypeToMetaData(emd, iFaceType);
+                    addSubTypeToMetaData(result, emd, iFaceType);
                 }
 
                 // set supertypes
@@ -130,15 +145,16 @@ public class ModelMetaDataImpl implements ModelMetaData {
                 do {
                     thisAndSuperTypes.add(t);
                     thisAndSuperTypes.addAll(data.getInterfaceTypes());
-                    data = typeToEntityMetaDatas.get(t);
+                    data = result.get(t);
                     t = data.getSuperType();
                 } while (t != null);
                 ((EntityMetaDataImpl) emd).setThisAndSuperTypes(thisAndSuperTypes);
             }
+            return result;
         }
     }
 
-    private void addSubTypeToMetaData(EntityMetaData emd, String superType) {
+    private void addSubTypeToMetaData(Map<String, EntityMetaData> typeToEntityMetaDatas, EntityMetaData emd, String superType) {
         final EntityMetaData superEmd = typeToEntityMetaDatas.get(superType);
         if (superEmd == null) {
             throw new IllegalArgumentException("No entity metadata for super type [" + superType + "]");
@@ -149,15 +165,13 @@ public class ModelMetaDataImpl implements ModelMetaData {
     @Override
     @Nullable
     public EntityMetaData getEntityMetaData(@NotNull String entityType) {
-        update();
-        return typeToEntityMetaDatas.get(entityType);
+        return update().get(entityType);
     }
 
     @Override
     @NotNull
     public Iterable<EntityMetaData> getEntitiesMetaData() {
-        update();
-        return typeToEntityMetaDatas.values();
+        return update().values();
     }
 
     public boolean hasAssociation(String sourceEntityName, String targetEntityName, String sourceName) {
@@ -208,19 +222,20 @@ public class ModelMetaDataImpl implements ModelMetaData {
         AssociationEndMetaDataImpl sourceEnd = new AssociationEndMetaDataImpl(
             amd, sourceName, target, sourceCardinality, sourceType,
             sourceCascadeDelete, sourceClearOnDelete, sourceTargetCascadeDelete, sourceTargetClearOnDelete);
-        addAssociationEndMetaDataToEntityTypeSubtree(source, sourceEnd);
+        addAssociationEndMetaDataToEntityTypeSubtree(update(), source, sourceEnd);
 
         if (type != AssociationType.Directed) {
             AssociationEndMetaDataImpl targetEnd = new AssociationEndMetaDataImpl(
                 amd, targetName, source, targetCardinality, targetType,
                 targetCascadeDelete, targetClearOnDelete, targetTargetCascadeDelete, targetTargetClearOnDelete);
-            addAssociationEndMetaDataToEntityTypeSubtree(target, targetEnd);
+            addAssociationEndMetaDataToEntityTypeSubtree(update(), target, targetEnd);
         }
 
         return amd;
     }
 
-    private void addAssociationEndMetaDataToEntityTypeSubtree(EntityMetaDataImpl emdi, AssociationEndMetaData aemd) {
+    private void addAssociationEndMetaDataToEntityTypeSubtree(Map<String, EntityMetaData> typeToEntityMetaDatas,
+                                                              EntityMetaDataImpl emdi, AssociationEndMetaData aemd) {
         emdi.addAssociationEndMetaData(aemd);
         for (String subType : emdi.getAllSubTypes()) {
             ((EntityMetaDataImpl) typeToEntityMetaDatas.get(subType)).addAssociationEndMetaData(aemd);
@@ -229,10 +244,12 @@ public class ModelMetaDataImpl implements ModelMetaData {
 
     @Override
     public AssociationMetaData removeAssociation(String entityName, String associationName) {
+        final Map<String, EntityMetaData> typeToEntityMetaDatas = update();
 
         // remove from source
         EntityMetaDataImpl source = (EntityMetaDataImpl) getEntityMetaData(entityName);
-        AssociationEndMetaData aemd = removeAssociationEndMetaDataFromEntityTypeSubtree(source, associationName);
+        AssociationEndMetaData aemd =
+            removeAssociationEndMetaDataFromEntityTypeSubtree(typeToEntityMetaDatas, source, associationName);
         AssociationMetaData amd = aemd.getAssociationMetaData();
 
 
@@ -240,7 +257,7 @@ public class ModelMetaDataImpl implements ModelMetaData {
         EntityMetaDataImpl target = (EntityMetaDataImpl) aemd.getOppositeEntityMetaData();
         if (amd.getType() != AssociationType.Directed) {
             String oppositeAssociationName = amd.getOppositeEnd(aemd).getName();
-            removeAssociationEndMetaDataFromEntityTypeSubtree(target, oppositeAssociationName);
+            removeAssociationEndMetaDataFromEntityTypeSubtree(typeToEntityMetaDatas, target, oppositeAssociationName);
         }
 
         associationMetaDatas.remove(getUniqueAssociationName(entityName, target.getType(),
@@ -248,7 +265,8 @@ public class ModelMetaDataImpl implements ModelMetaData {
         return amd;
     }
 
-    private AssociationEndMetaData removeAssociationEndMetaDataFromEntityTypeSubtree(EntityMetaDataImpl emdi, String associationName) {
+    private AssociationEndMetaData removeAssociationEndMetaDataFromEntityTypeSubtree(
+        Map<String, EntityMetaData> typeToEntityMetaDatas, EntityMetaDataImpl emdi, String associationName) {
         AssociationEndMetaData removedEndMetaData = emdi.removeAssociationEndMetaData(associationName);
         for (String subType : emdi.getAllSubTypes()) {
             ((EntityMetaDataImpl) typeToEntityMetaDatas.get(subType)).removeAssociationEndMetaData(associationName);

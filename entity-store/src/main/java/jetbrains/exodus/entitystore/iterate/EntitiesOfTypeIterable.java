@@ -150,6 +150,17 @@ public class EntitiesOfTypeIterable extends EntityIterableBase {
         }
 
         @Override
+        public int getEntityTypeId() {
+            return entityTypeId;
+        }
+
+        @NotNull
+        @Override
+        public int[] getTypeIdsAffectingCreation() {
+            return new int[]{entityTypeId};
+        }
+
+        @Override
         public boolean isMatchedEntityAdded(@NotNull final EntityId added) {
             return added.getTypeId() == entityTypeId;
         }

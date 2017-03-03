@@ -121,6 +121,12 @@ public interface EnvironmentConfigMBean {
 
     boolean getGcUtilizationFromScratch();
 
+    void setGcUtilizationFromScratch(boolean fromScratch);
+
+    String getGcUtilizationFromFile();
+
+    void setGcUtilizationFromFile(String file);
+
     boolean getGcUseExclusiveTransaction();
 
     void setGcUseExclusiveTransaction(boolean useExclusiveTransaction);

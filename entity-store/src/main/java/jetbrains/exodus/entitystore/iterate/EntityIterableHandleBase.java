@@ -25,6 +25,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
 
+import static jetbrains.exodus.entitystore.iterate.EntityIterableBase.NULL_TYPE_ID;
+
 @SuppressWarnings({"AbstractClassWithoutAbstractMethods", "RawUseOfParameterizedType", "ProtectedField"})
 public abstract class EntityIterableHandleBase implements EntityIterableHandle {
 
@@ -81,6 +83,11 @@ public abstract class EntityIterableHandleBase implements EntityIterableHandle {
         return store;
     }
 
+    @Override
+    public int getEntityTypeId() {
+        return NULL_TYPE_ID;
+    }
+
     @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     public boolean equals(Object obj) {
         if (!(obj instanceof EntityIterableHandle)) {
@@ -133,6 +140,18 @@ public abstract class EntityIterableHandleBase implements EntityIterableHandle {
     }
 
     @Override
+    @NotNull
+    public int[] getPropertyIds() {
+        return IdFilter.EMPTY_ID_ARRAY;
+    }
+
+    @Override
+    @NotNull
+    public int[] getTypeIdsAffectingCreation() {
+        return IdFilter.EMPTY_ID_ARRAY;
+    }
+
+    @Override
     public boolean isExpired() {
         return false;
     }
@@ -158,7 +177,7 @@ public abstract class EntityIterableHandleBase implements EntityIterableHandle {
     }
 
     @NotNull
-    protected static int[] mergeLinkIds(@NotNull final int[] left, @NotNull final int[] right) {
+    protected static int[] mergeFieldIds(@NotNull final int[] left, @NotNull final int[] right) {
         final int l = left.length;
         if (l == 0) return right;
         final int r = right.length;

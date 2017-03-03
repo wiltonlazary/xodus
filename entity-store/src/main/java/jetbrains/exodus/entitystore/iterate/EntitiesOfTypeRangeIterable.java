@@ -92,6 +92,18 @@ public class EntitiesOfTypeRangeIterable extends EntityIterableBase {
                 hash.apply(max);
             }
 
+            @NotNull
+            @Override
+            public int[] getTypeIdsAffectingCreation() {
+                // TODO: if open ranges are prohibited, we can improve this
+                return new int[]{entityTypeId};
+            }
+
+            @Override
+            public int getEntityTypeId() {
+                return entityTypeId;
+            }
+
             @Override
             public boolean isMatchedEntityAdded(@NotNull final EntityId added) {
                 return added.getTypeId() == entityTypeId && isRangeAffected(added.getLocalId());

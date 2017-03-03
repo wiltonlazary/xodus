@@ -17,15 +17,18 @@ package jetbrains.exodus.javascript
 
 import jetbrains.exodus.core.crypto.MessageDigestUtil
 import jetbrains.exodus.core.execution.ThreadJobProcessorPool
+import jetbrains.exodus.javascript.RhinoCommand.Companion.CONSOLE
 import mu.KLogging
 import org.apache.sshd.SshServer
 import org.apache.sshd.server.PasswordAuthenticator
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
+import java.io.Closeable
 import java.io.File
 
-class RhinoServer(config: Map<String, *>, port: Int = 2808, password: String? = null) {
+class RhinoServer(config: Map<String, *>, port: Int = 2808, password: String? = null) : Closeable {
 
     companion object : KLogging() {
+
         val commandProcessor = ThreadJobProcessorPool.getOrCreateJobProcessor("Exodus shared RhinoServer processor")
     }
 
@@ -42,13 +45,19 @@ class RhinoServer(config: Map<String, *>, port: Int = 2808, password: String? = 
             passwordAuthenticator = PasswordAuthenticator { username, password, session ->
                 passwordMD5 == null || passwordMD5 == MessageDigestUtil.MD5(password)
             }
-            setShellFactory { RhinoCommand(config) }
+            setShellFactory { RhinoCommand.createCommand(config) }
             setPort(port)
+            // if we 're within console then setup infinite session timeout
+            if (config[CONSOLE] == true) {
+                properties[SshServer.IDLE_TIMEOUT] = Long.MAX_VALUE.toString()
+            }
             start()
         }
     }
 
-    fun stop() {
+    val port: Int = sshd.port
+
+    override fun close() {
         logger.info {
             "Stopping SSH daemon ${sshd.host}:${sshd.port}"
         }

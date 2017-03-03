@@ -133,6 +133,12 @@ public final class PropertiesIterable extends EntityIterableBase {
             super(PropertiesIterable.this.getStore(), PropertiesIterable.getType());
         }
 
+        @NotNull
+        @Override
+        public int[] getPropertyIds() {
+            return new int[]{propertyId};
+        }
+
         @Override
         public void toString(@NotNull final StringBuilder builder) {
             super.toString(builder);
@@ -146,6 +152,11 @@ public final class PropertiesIterable extends EntityIterableBase {
             hash.apply(entityTypeId);
             hash.applyDelimiter();
             hash.apply(propertyId);
+        }
+
+        @Override
+        public int getEntityTypeId() {
+            return entityTypeId;
         }
 
         @Override
